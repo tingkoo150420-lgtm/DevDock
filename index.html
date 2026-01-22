@@ -1,1032 +1,224 @@
 <!doctype html>
 <html lang="ko">
 <head>
+  <!-- Google Search Console verification -->
+  <meta name="google-site-verification" content="dZYekcHXTu7P1MDVOmVvv0dP6lUyaufASDt_bfHrt8Y" />
+
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CodeBox — Browser Runner</title>
-  <meta name="description" content="브라우저에서 실행되는 온라인 코드 실행기 (JS, Python, Lua, MyLang)" />
+  <title>DevDock — Browser Code Runner</title>
+  <meta name="description" content="DevDock는 브라우저에서 바로 실행되는 온라인 코드 실행기입니다. JavaScript, Python(Pyodide), Lua, 나만의 언어를 지원합니다." />
 
-  <!-- Google Fonts (30+) -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Jua&family=Gugi&family=Song+Myung&family=Gothic+A1:wght@300;400;700;900&family=Noto+Sans+KR:wght@300;400;700;900&family=Noto+Serif+KR:wght@300;400;700;900&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Nanum+Brush+Script&family=Gaegu:wght@300;400;700&family=Hi+Melody&family=Yeon+Sung&family=Poor+Story&family=Gamja+Flower&family=Kirang+Haerang&family=East+Sea+Dokdo&family=Sunflower:wght@300;500;700&family=Stylish&family=Inter:wght@300;400;600;800&family=Roboto:wght@300;400;700;900&family=Poppins:wght@300;400;600;800&family=Montserrat:wght@300;400;600;800&family=Oswald:wght@300;400;600;700&family=Anton&family=Bebas+Neue&family=JetBrains+Mono:wght@300;400;700&family=Fira+Code:wght@300;400;700&family=Source+Code+Pro:wght@300;400;700&family=Inconsolata:wght@300;400;700&family=PT+Mono&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@300;400;700;900&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
 
   <style>
     :root{
       --bg:#000;
       --panel:#0b0b0b;
-      --panel2:#0f0f0f;
+      --line:#1f2937;
       --text:#fff;
       --muted:#9ca3af;
-      --line:#1f2937;
       --accent:#22c55e;
       --danger:#ef4444;
-      --warn:#f59e0b;
-      --shadow:0 18px 60px rgba(0,0,0,.55);
-      --radius:18px;
+      --radius:16px;
 
-      /* fonts */
       --title-font:"Black Han Sans", system-ui, sans-serif;
-      --ui-font:system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      --mono-font:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-
-      --output-size:13px;
-    }
-
-    [data-theme="black"]{
-      --bg:#000;
-      --panel:#0b0b0b;
-      --panel2:#0f0f0f;
-      --text:#fff;
-      --muted:#9ca3af;
-      --line:#1f2937;
-      --shadow:0 18px 60px rgba(0,0,0,.55);
-    }
-    [data-theme="white"]{
-      --bg:#f6f7fb;
-      --panel:#fff;
-      --panel2:#fff;
-      --text:#0b1020;
-      --muted:#4b5563;
-      --line:#e5e7eb;
-      --shadow:0 18px 60px rgba(0,0,0,.10);
-    }
-    [data-theme="navy"]{
-      --bg:#060a14;
-      --panel:#0b1220;
-      --panel2:#0d1628;
-      --text:#e8eefc;
-      --muted:#a7b3cc;
-      --line:#1b2a4a;
-      --shadow:0 18px 60px rgba(0,0,0,.55);
+      --ui-font:"Noto Sans KR", system-ui, sans-serif;
+      --mono-font:"JetBrains Mono", ui-monospace, monospace;
     }
 
     *{box-sizing:border-box}
-    html,body{height:100%}
     body{
       margin:0;
-      background: radial-gradient(1200px 600px at 50% 0%, rgba(34,197,94,.10), transparent 60%), var(--bg);
+      background:var(--bg);
       color:var(--text);
       font-family:var(--ui-font);
     }
 
-    /* top */
+    /* Top bar */
     .top{
-      position:sticky; top:0; z-index:50;
-      height:62px;
-      display:flex; align-items:center; justify-content:space-between;
-      padding:0 14px;
-      background: color-mix(in srgb, var(--panel) 92%, transparent);
+      height:60px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 16px;
       border-bottom:1px solid var(--line);
-      backdrop-filter: blur(10px);
+      background:#050505;
     }
     .brand{
-      display:flex; align-items:center; gap:10px;
-      font-weight:900; letter-spacing:.4px;
       font-family:var(--title-font);
-      user-select:none;
+      font-size:22px;
+      letter-spacing:1px;
     }
-    .badge{
-      font-family:var(--ui-font);
-      font-size:12px;
-      color: color-mix(in srgb, var(--text) 65%, transparent);
-      border:1px solid var(--line);
-      padding:4px 8px;
-      border-radius:999px;
-      background: color-mix(in srgb, var(--panel2) 85%, transparent);
-    }
-
-    .actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
     .btn{
       border:1px solid var(--line);
-      background: color-mix(in srgb, var(--panel2) 90%, transparent);
-      color:var(--text);
-      padding:9px 12px;
-      border-radius:14px;
-      font-weight:800;
+      background:#0b0b0b;
+      color:#fff;
+      padding:8px 14px;
+      border-radius:12px;
+      font-weight:700;
       cursor:pointer;
-      user-select:none;
-      transition: transform .05s ease, filter .2s ease;
-      font-family:var(--ui-font);
     }
-    .btn:active{transform: translateY(1px)}
     .btn.primary{
+      background:linear-gradient(180deg,#22c55e,#16a34a);
       border:none;
-      background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 95%, #fff 5%), color-mix(in srgb, var(--accent) 75%, #000 25%));
       color:#041007;
     }
-    .btn.warn{
-      border:1px solid color-mix(in srgb, var(--warn) 55%, var(--line));
-      color: color-mix(in srgb, var(--warn) 95%, var(--text));
-      background: color-mix(in srgb, var(--panel2) 90%, transparent);
-    }
-    .btn.danger{
-      border:1px solid color-mix(in srgb, var(--danger) 55%, var(--line));
-      color: color-mix(in srgb, var(--danger) 85%, var(--text));
-      background: color-mix(in srgb, var(--panel2) 90%, transparent);
-    }
 
-    .pill{
-      font-family:var(--ui-font);
-      font-size:12px;
-      padding:4px 8px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background: color-mix(in srgb, var(--panel2) 86%, transparent);
-      color: color-mix(in srgb, var(--text) 75%, transparent);
-    }
-
-    /* layout */
+    /* Layout */
     .main{
+      max-width:1100px;
+      margin:16px auto;
+      padding:0 12px;
       display:grid;
-      grid-template-columns: 1.15fr .85fr;
-      gap:14px;
-      padding:14px;
-      max-width:1200px;
-      margin:0 auto;
+      grid-template-columns:1.2fr .8fr;
+      gap:12px;
+    }
+    @media(max-width:900px){
+      .main{grid-template-columns:1fr}
     }
 
     .card{
-      background: color-mix(in srgb, var(--panel) 92%, transparent);
       border:1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      border-radius:var(--radius);
+      background:#0b0b0b;
       overflow:hidden;
-      display:flex;
-      flex-direction:column;
-      min-height: 320px;
     }
     .card-head{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:10px;
       padding:10px 12px;
       border-bottom:1px solid var(--line);
-      background: color-mix(in srgb, var(--panel2) 88%, transparent);
-      flex-wrap:wrap;
-      font-family:var(--ui-font);
-    }
-    .group{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
-    select, input[type="text"]{
-      border:1px solid var(--line);
-      background: color-mix(in srgb, var(--panel2) 92%, transparent);
-      color:var(--text);
-      padding:9px 10px;
-      border-radius:12px;
-      outline:none;
-      font-weight:700;
-      font-family:var(--ui-font);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
     }
 
-    /* Monaco editor container */
-    #editor{
-      height: 520px;
-      min-height: 320px;
+    /* Editor */
+    textarea{
       width:100%;
-      background: transparent;
+      height:420px;
+      resize:none;
+      border:none;
+      outline:none;
+      background:#000;
+      color:#fff;
+      padding:12px;
+      font-family:var(--mono-font);
+      font-size:14px;
+      line-height:1.5;
     }
 
-    .statusbar{
-      display:flex; align-items:center; justify-content:space-between;
-      padding:8px 12px;
-      border-top:1px solid var(--line);
-      color:var(--muted);
-      font-size:12px;
-      background: color-mix(in srgb, var(--panel2) 86%, transparent);
-      font-family:var(--ui-font);
-    }
-    .kbd{
-      font-family: var(--mono-font);
-      font-size:11px;
-      padding:2px 6px;
-      border:1px solid var(--line);
-      border-radius:8px;
-      background: color-mix(in srgb, var(--panel2) 85%, transparent);
-      color: color-mix(in srgb, var(--text) 70%, transparent);
-    }
-
-    /* output */
-    .out{
-      flex:1;
-      overflow:auto;
-      background: color-mix(in srgb, var(--panel) 85%, transparent);
-    }
+    /* Output */
     pre{
       margin:0;
       padding:12px;
-      font-family: var(--mono-font);
-      font-size: var(--output-size);
-      line-height:1.45;
+      font-family:var(--mono-font);
+      font-size:13px;
       white-space:pre-wrap;
-      word-break: break-word;
-      color: var(--text);
+      word-break:break-word;
     }
-    .line-muted{color:var(--muted)}
-    .line-err{color: color-mix(in srgb, var(--danger) 85%, var(--text))}
-    .line-warn{color: color-mix(in srgb, var(--warn) 95%, var(--text))}
-    .line-ok{color: color-mix(in srgb, var(--accent) 75%, var(--text))}
+    .muted{color:var(--muted)}
+    .err{color:var(--danger)}
+    .ok{color:var(--accent)}
 
-    /* modal */
-    .modal-backdrop{
-      position:fixed; inset:0;
-      background: rgba(0,0,0,.55);
-      display:none;
-      align-items:center; justify-content:center;
-      z-index:999;
-      padding:14px;
-    }
-    .modal{
-      width:min(900px, 100%);
-      background: var(--panel);
+    select{
+      background:#000;
+      color:#fff;
       border:1px solid var(--line);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .modal-head{
-      padding:12px 14px;
-      display:flex; align-items:center; justify-content:space-between;
-      background: color-mix(in srgb, var(--panel2) 90%, transparent);
-      border-bottom:1px solid var(--line);
-      font-family:var(--ui-font);
-      font-weight:900;
-    }
-    .modal-body{
-      padding:14px;
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:14px;
-      font-family:var(--ui-font);
-    }
-    .field{
-      border:1px solid var(--line);
-      border-radius: 16px;
-      padding:12px;
-      background: color-mix(in srgb, var(--panel2) 86%, transparent);
-    }
-    .field h3{margin:0 0 8px 0; font-size:14px}
-    .field p{margin:0 0 10px 0; color:var(--muted); font-size:12px; line-height:1.4}
-    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
-    .small{font-size:12px;color:var(--muted)}
-
-    @media (max-width: 860px){
-      .main{grid-template-columns: 1fr; }
-      #editor{height: 420px;}
-      .modal-body{grid-template-columns: 1fr}
+      padding:6px 10px;
+      border-radius:10px;
+      font-weight:700;
     }
   </style>
 </head>
 
-<body data-theme="black">
+<body>
   <div class="top">
-    <div class="brand">
-      <span>CodeBox</span>
-      <span class="badge">Browser Runner</span>
-      <span class="pill" id="runtimePill">Booting…</span>
-      <span class="pill" id="modePill">console</span>
-    </div>
-
-    <div class="actions">
-      <button class="btn" id="openFileBtn">파일 열기</button>
-      <button class="btn" id="downloadBtn">다운로드</button>
-      <button class="btn" id="saveBtn">저장</button>
-      <button class="btn" id="loadBtn">불러오기</button>
-      <button class="btn warn" id="donateBtn" title="그냥 링크로만 연결됨">기부</button>
-      <button class="btn" id="settingsBtn">설정</button>
-      <button class="btn danger" id="stopBtn">Stop</button>
+    <div class="brand">DevDock</div>
+    <div>
+      <button class="btn" id="clearBtn">Clear</button>
       <button class="btn primary" id="runBtn">Run</button>
     </div>
   </div>
 
   <div class="main">
     <!-- Editor -->
-    <section class="card">
+    <div class="card">
       <div class="card-head">
-        <div class="group">
-          <select id="lang">
-            <option value="js">JavaScript</option>
-            <option value="py">Python (Pyodide)</option>
-            <option value="lua">Lua (Fengari)</option>
-            <option value="mylang">MyLang (나만의 언어)</option>
-          </select>
-          <span class="pill" id="hintPill">Ctrl+Enter 실행</span>
-        </div>
-
-        <div class="group">
-          <button class="btn" id="resetBtn">Reset</button>
-          <button class="btn danger" id="clearOutBtn">출력 지우기</button>
-        </div>
+        <b>Editor</b>
+        <select id="lang">
+          <option value="js">JavaScript</option>
+          <option value="py">Python</option>
+          <option value="lua">Lua</option>
+          <option value="mylang">MyLang</option>
+        </select>
       </div>
-
-      <div id="editor"></div>
-
-      <div class="statusbar">
-        <div>
-          <span class="kbd">Ctrl</span>+<span class="kbd">Enter</span> 실행 ·
-          <span class="kbd">Ctrl</span>+<span class="kbd">S</span> 저장
-        </div>
-        <div id="stats">Lines: 1 · Chars: 0</div>
-      </div>
-    </section>
+      <textarea id="code">// DevDock
+console.log("Hello DevDock!");
+      </textarea>
+    </div>
 
     <!-- Output -->
-    <section class="card">
+    <div class="card">
       <div class="card-head">
-        <div class="group">
-          <b>Output</b>
-          <span class="pill small" id="runInfo">Ready</span>
-        </div>
-        <div class="group">
-          <button class="btn" id="copyOutBtn">복사</button>
-        </div>
+        <b>Output</b>
       </div>
-      <div class="out" id="outWrap">
-        <pre id="out"><span class="line-muted">Ready. Run 버튼을 눌러봐!</span></pre>
-      </div>
-    </section>
-  </div>
-
-  <!-- Hidden file input -->
-  <input type="file" id="fileInput" accept=".txt,.js,.py,.lua" style="display:none" />
-
-  <!-- Settings Modal -->
-  <div class="modal-backdrop" id="settingsModal">
-    <div class="modal">
-      <div class="modal-head">
-        <span>설정</span>
-        <button class="btn" id="closeSettings">닫기</button>
-      </div>
-      <div class="modal-body">
-        <div class="field">
-          <h3>테마</h3>
-          <p>블랙/화이트/남색</p>
-          <div class="row">
-            <button class="btn" data-theme="black">블랙</button>
-            <button class="btn" data-theme="white">화이트</button>
-            <button class="btn" data-theme="navy">남색</button>
-          </div>
-          <p class="small" style="margin-top:10px">Monaco 에디터 테마도 같이 바뀜.</p>
-        </div>
-
-        <div class="field">
-          <h3>폰트 (30+)</h3>
-          <p>제목 / UI / 코드 폰트를 따로 바꿀 수 있어.</p>
-
-          <div class="row">
-            <label class="small">제목</label>
-            <select id="titleFont"></select>
-          </div>
-
-          <div class="row" style="margin-top:10px">
-            <label class="small">UI</label>
-            <select id="uiFont"></select>
-          </div>
-
-          <div class="row" style="margin-top:10px">
-            <label class="small">코드</label>
-            <select id="monoFont"></select>
-          </div>
-        </div>
-
-        <div class="field">
-          <h3>글자 크기</h3>
-          <p>모바일에서도 보기 좋게 조절.</p>
-          <div class="row">
-            <label class="small">에디터</label>
-            <input id="editorSize" type="range" min="12" max="22" value="14" />
-            <span class="pill" id="editorSizePill">14px</span>
-          </div>
-          <div class="row" style="margin-top:10px">
-            <label class="small">출력</label>
-            <input id="outputSize" type="range" min="11" max="20" value="13" />
-            <span class="pill" id="outputSizePill">13px</span>
-          </div>
-        </div>
-
-        <div class="field">
-          <h3>MyLang 안내</h3>
-          <p>간단 문법: <span class="kbd">let</span>, <span class="kbd">print</span>, + - * /</p>
-          <pre style="margin:0; font-size:12px; color:var(--muted); background:transparent; padding:0; font-family:var(--mono-font)">
-# 주석
-let x = 5
-let y = x + 3
-print "x=" + x
-print y
-          </pre>
-          <p class="small" style="margin-top:10px">※ 이 언어는 “네 사이트 전용” 언어라서 커스터마이즈하기 쉬움.</p>
-        </div>
-      </div>
+      <pre id="out"><span class="muted">Ready.</span></pre>
     </div>
   </div>
 
 <script>
-/* =========================
-   0) DONATE 링크(선택)
-   - 정산 설정 안 해도 "링크 열기"는 됨.
-   - 너가 쓰고 싶은 링크 넣기:
-     예) https://buymeacoffee.com/yourname
-     예) https://paypal.me/yourname
-     예) GitHub Sponsor 링크 등
-========================= */
-const DONATE_URL = ""; // <- 여기에 넣어! (없으면 빈칸)
+const out = document.getElementById("out");
+const code = document.getElementById("code");
+const lang = document.getElementById("lang");
 
-/* =========================
-   1) helpers
-========================= */
-const $ = (id) => document.getElementById(id);
-const outEl = $("out");
-const outWrap = $("outWrap");
-const statsEl = $("stats");
-const runtimePill = $("runtimePill");
-const modePill = $("modePill");
-const runInfo = $("runInfo");
-const langEl = $("lang");
-
-function setPill(el, text, tone="ok"){
-  el.textContent = text;
-  el.style.borderColor =
-    tone==="ok" ? "color-mix(in srgb, var(--accent) 40%, var(--line))" :
-    tone==="warn" ? "color-mix(in srgb, var(--warn) 55%, var(--line))" :
-    "color-mix(in srgb, var(--danger) 55%, var(--line))";
+function log(msg, cls=""){
+  const span=document.createElement("span");
+  span.className=cls;
+  span.textContent=msg+"\n";
+  out.appendChild(span);
 }
 
-function appendLine(text, cls=""){
-  const span = document.createElement("span");
-  span.className = cls;
-  span.textContent = text + "\n";
-  // 첫 안내문 지우기
-  if (outEl.textContent.trim() === "Ready. Run 버튼을 눌러봐!") outEl.textContent = "";
-  outEl.appendChild(span);
-  outWrap.scrollTop = outWrap.scrollHeight;
-}
 function clearOut(){
-  outEl.textContent = "";
-  appendLine("output cleared.", "line-muted");
-}
-async function copyText(t){
-  await navigator.clipboard.writeText(t);
-}
-function getOutText(){
-  return Array.from(outEl.childNodes).map(n => n.textContent || "").join("");
-}
-function updateStatsFromCode(code){
-  const lines = code.length ? code.split("\n").length : 1;
-  statsEl.textContent = `Lines: ${lines} · Chars: ${code.length}`;
-}
-function now(){
-  const d=new Date();
-  return d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"});
+  out.textContent="";
+  log("cleared.","muted");
 }
 
-/* =========================
-   2) settings + fonts (30+)
-========================= */
-const SETTINGS_KEY = "codebox_settings_v3";
-const CODE_KEY = "codebox_code_v3";
+document.getElementById("clearBtn").onclick=clearOut;
 
-const FONT_LIST = [
-  // Title (굵고 썸네일 느낌)
-  { key:"Black Han Sans", css:`"Black Han Sans", system-ui, sans-serif`, group:"title" },
-  { key:"Jua", css:`"Jua", system-ui, sans-serif`, group:"title" },
-  { key:"Do Hyeon", css:`"Do Hyeon", system-ui, sans-serif`, group:"title" },
-  { key:"Gugi", css:`"Gugi", system-ui, sans-serif`, group:"title" },
-  { key:"Anton", css:`"Anton", system-ui, sans-serif`, group:"title" },
-  { key:"Bebas Neue", css:`"Bebas Neue", system-ui, sans-serif`, group:"title" },
-  { key:"Oswald", css:`"Oswald", system-ui, sans-serif`, group:"title" },
-  { key:"Montserrat", css:`"Montserrat", system-ui, sans-serif`, group:"title" },
+document.getElementById("runBtn").onclick=async()=>{
+  clearOut();
+  const src=code.value;
 
-  // UI (가독성)
-  { key:"Noto Sans KR", css:`"Noto Sans KR", system-ui, sans-serif`, group:"ui" },
-  { key:"Gothic A1", css:`"Gothic A1", system-ui, sans-serif`, group:"ui" },
-  { key:"Nanum Gothic", css:`"Nanum Gothic", system-ui, sans-serif`, group:"ui" },
-  { key:"Inter", css:`"Inter", system-ui, sans-serif`, group:"ui" },
-  { key:"Roboto", css:`"Roboto", system-ui, sans-serif`, group:"ui" },
-  { key:"Poppins", css:`"Poppins", system-ui, sans-serif`, group:"ui" },
-
-  // UI (분위기/손글씨/감성)
-  { key:"Gaegu", css:`"Gaegu", system-ui, sans-serif`, group:"ui" },
-  { key:"Hi Melody", css:`"Hi Melody", system-ui, sans-serif`, group:"ui" },
-  { key:"Yeon Sung", css:`"Yeon Sung", system-ui, sans-serif`, group:"ui" },
-  { key:"Poor Story", css:`"Poor Story", system-ui, sans-serif`, group:"ui" },
-  { key:"Gamja Flower", css:`"Gamja Flower", system-ui, sans-serif`, group:"ui" },
-  { key:"Kirang Haerang", css:`"Kirang Haerang", system-ui, sans-serif`, group:"ui" },
-  { key:"East Sea Dokdo", css:`"East Sea Dokdo", system-ui, sans-serif`, group:"ui" },
-  { key:"Sunflower", css:`"Sunflower", system-ui, sans-serif`, group:"ui" },
-  { key:"Stylish", css:`"Stylish", system-ui, sans-serif`, group:"ui" },
-  { key:"Nanum Pen Script", css:`"Nanum Pen Script", system-ui, sans-serif`, group:"ui" },
-  { key:"Nanum Brush Script", css:`"Nanum Brush Script", system-ui, sans-serif`, group:"ui" },
-
-  // Serif (느낌)
-  { key:"Song Myung", css:`"Song Myung", serif`, group:"ui" },
-  { key:"Noto Serif KR", css:`"Noto Serif KR", serif`, group:"ui" },
-  { key:"Nanum Myeongjo", css:`"Nanum Myeongjo", serif`, group:"ui" },
-
-  // Mono (코드)
-  { key:"JetBrains Mono", css:`"JetBrains Mono", ui-monospace, monospace`, group:"mono" },
-  { key:"Fira Code", css:`"Fira Code", ui-monospace, monospace`, group:"mono" },
-  { key:"Source Code Pro", css:`"Source Code Pro", ui-monospace, monospace`, group:"mono" },
-  { key:"Inconsolata", css:`"Inconsolata", ui-monospace, monospace`, group:"mono" },
-  { key:"PT Mono", css:`"PT Mono", ui-monospace, monospace`, group:"mono" },
-  { key:"Space Mono", css:`"Space Mono", ui-monospace, monospace`, group:"mono" },
-];
-
-function loadSettings(){
-  try{
-    return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {
-      theme:"black",
-      titleKey:"Black Han Sans",
-      uiKey:"Noto Sans KR",
-      monoKey:"JetBrains Mono",
-      editorSize:14,
-      outputSize:13
-    };
-  }catch{
-    return {
-      theme:"black",
-      titleKey:"Black Han Sans",
-      uiKey:"Noto Sans KR",
-      monoKey:"JetBrains Mono",
-      editorSize:14,
-      outputSize:13
-    };
-  }
-}
-function saveSettings(s){ localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); }
-
-function applyThemeToMonaco(theme){
-  if (!window.monaco) return;
-  monaco.editor.setTheme(theme==="white" ? "vs" : "vs-dark");
-}
-
-function applySettings(){
-  const s = loadSettings();
-  document.body.setAttribute("data-theme", s.theme || "black");
-
-  const title = FONT_LIST.find(f=>f.key===s.titleKey)?.css || `"Black Han Sans", system-ui, sans-serif`;
-  const ui = FONT_LIST.find(f=>f.key===s.uiKey)?.css || `system-ui, sans-serif`;
-  const mono = FONT_LIST.find(f=>f.key===s.monoKey)?.css || `ui-monospace, monospace`;
-
-  document.documentElement.style.setProperty("--title-font", title);
-  document.documentElement.style.setProperty("--ui-font", ui);
-  document.documentElement.style.setProperty("--mono-font", mono);
-
-  document.documentElement.style.setProperty("--output-size", (s.outputSize||13)+"px");
-  $("editorSizePill").textContent = (s.editorSize||14)+"px";
-  $("outputSizePill").textContent = (s.outputSize||13)+"px";
-
-  if (window.editor){
-    editor.updateOptions({
-      fontFamily: mono,
-      fontSize: s.editorSize || 14
-    });
-  }
-  applyThemeToMonaco(s.theme);
-}
-
-function fillSelect(sel, group, current){
-  sel.innerHTML = "";
-  FONT_LIST.filter(f=>f.group===group).forEach(f=>{
-    const o = document.createElement("option");
-    o.value = f.key;
-    o.textContent = f.key;
-    sel.appendChild(o);
-  });
-  sel.value = current;
-}
-
-function initSettingsUI(){
-  const s = loadSettings();
-  fillSelect($("titleFont"), "title", s.titleKey);
-  fillSelect($("uiFont"), "ui", s.uiKey);
-  fillSelect($("monoFont"), "mono", s.monoKey);
-
-  $("editorSize").value = s.editorSize || 14;
-  $("outputSize").value = s.outputSize || 13;
-  $("editorSizePill").textContent = (s.editorSize||14)+"px";
-  $("outputSizePill").textContent = (s.outputSize||13)+"px";
-
-  document.querySelectorAll("[data-theme]").forEach(btn=>{
-    btn.onclick = ()=>{
-      const s2 = loadSettings();
-      s2.theme = btn.getAttribute("data-theme");
-      saveSettings(s2);
-      applySettings();
-    };
-  });
-
-  const onFonts = ()=>{
-    const s2 = loadSettings();
-    s2.titleKey = $("titleFont").value;
-    s2.uiKey = $("uiFont").value;
-    s2.monoKey = $("monoFont").value;
-    saveSettings(s2);
-    applySettings();
-  };
-  $("titleFont").onchange = onFonts;
-  $("uiFont").onchange = onFonts;
-  $("monoFont").onchange = onFonts;
-
-  $("editorSize").oninput = ()=>{
-    const s2 = loadSettings();
-    s2.editorSize = +$("editorSize").value;
-    saveSettings(s2);
-    applySettings();
-  };
-  $("outputSize").oninput = ()=>{
-    const s2 = loadSettings();
-    s2.outputSize = +$("outputSize").value;
-    saveSettings(s2);
-    applySettings();
-  };
-}
-
-/* =========================
-   3) load scripts (Monaco, Pyodide, Lua)
-========================= */
-function loadScript(src){
-  return new Promise((resolve,reject)=>{
-    const s=document.createElement("script");
-    s.src=src; s.async=true;
-    s.onload=()=>resolve();
-    s.onerror=()=>reject(new Error("Failed: "+src));
-    document.head.appendChild(s);
-  });
-}
-
-async function loadMonaco(){
-  setPill(runtimePill, "Loading Editor…", "warn");
-  await loadScript("https://cdn.jsdelivr.net/npm/monaco-editor@0.49.0/min/vs/loader.js");
-  window.require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.49.0/min/vs' } });
-  return new Promise((resolve)=> window.require(['vs/editor/editor.main'], () => resolve()));
-}
-
-let pyodide = null;
-async function ensurePy(){
-  if (pyodide) return pyodide;
-  setPill(runtimePill, "Loading Pyodide…", "warn");
-  await loadScript("https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js");
-  pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/" });
-  return pyodide;
-}
-
-let luaReady=false;
-async function ensureLua(){
-  if (luaReady) return;
-  setPill(runtimePill, "Loading Lua…", "warn");
-  await loadScript("https://unpkg.com/fengari-web/dist/fengari-web.js");
-  luaReady=true;
-}
-
-/* =========================
-   4) editor + language
-========================= */
-function monacoLangFor(sel){
-  if (sel==="js") return "javascript";
-  if (sel==="py") return "python";
-  if (sel==="lua") return "lua";
-  return "plaintext";
-}
-
-function defaultCodeFor(lang){
-  if (lang==="py") return `print("Hello from Python!")\n\ndef fib(n):\n  return n if n<=1 else fib(n-1)+fib(n-2)\n\nprint("fib(10) =", fib(10))\n`;
-  if (lang==="lua") return `print("Hello from Lua!")\nfunction fib(n) if n<=1 then return n else return fib(n-1)+fib(n-2) end end\nprint("fib(10) =", fib(10))\n`;
-  if (lang==="mylang") return `# MyLang\nlet x = 5\nlet y = x + 3\nprint "x=" + x\nprint y\nprint "sum=" + (x + y)\n`;
-  return `console.log("Hello from JS!")\nfunction fib(n){ return n<=1 ? n : fib(n-1)+fib(n-2); }\nconsole.log("fib(10) =", fib(10));\n`;
-}
-
-/* =========================
-   5) runners: JS / Py / Lua / MyLang
-========================= */
-let jsWorker = null;
-
-function stopJS(){
-  if (jsWorker){
-    jsWorker.terminate();
-    jsWorker = null;
-    appendLine("JS stopped (worker terminated).", "line-warn");
-  }else{
-    appendLine("Stop: JS 실행 중일 때만 확실히 멈출 수 있어.", "line-muted");
-  }
-}
-
-function runJS(code){
-  return new Promise((resolve)=>{
-    setPill(modePill, "js-worker", "ok");
-
-    if (jsWorker){ jsWorker.terminate(); jsWorker=null; }
-
-    const workerSrc = `
-      self.console = {
-        log:(...a)=>self.postMessage({t:"log", v:a.map(String).join(" ")}),
-        error:(...a)=>self.postMessage({t:"err", v:a.map(String).join(" ")}),
-        warn:(...a)=>self.postMessage({t:"warn", v:a.map(String).join(" ")})
-      };
-      self.onmessage = async (e)=>{
-        try{
-          const importScripts = undefined;
-          const Function_ = Function;
-          const fn = new Function_("'use strict';\\n" + e.data);
-          const r = fn();
-          if (r && typeof r.then === "function") await r;
-          self.postMessage({t:"done"});
-        }catch(err){
-          self.postMessage({t:"err", v: String(err && err.stack ? err.stack : err)});
-          self.postMessage({t:"done"});
-        }
-      };
-    `;
-    const blob = new Blob([workerSrc], {type:"text/javascript"});
-    jsWorker = new Worker(URL.createObjectURL(blob));
-
-    const timeoutMs = 5000;
-    const timer = setTimeout(()=>{
-      if (jsWorker){
-        jsWorker.terminate(); jsWorker=null;
-        appendLine("JS timeout (terminated).", "line-err");
-      }
-      resolve();
-    }, timeoutMs);
-
-    jsWorker.onmessage = (e)=>{
-      if (e.data?.t==="log") appendLine(e.data.v, "line-ok");
-      if (e.data?.t==="warn") appendLine(e.data.v, "line-warn");
-      if (e.data?.t==="err") appendLine(e.data.v, "line-err");
-      if (e.data?.t==="done"){
-        clearTimeout(timer);
-        if (jsWorker){ jsWorker.terminate(); jsWorker=null; }
-        resolve();
-      }
-    };
-
-    jsWorker.postMessage(code);
-  });
-}
-
-async function runPy(code){
-  setPill(modePill, "pyodide", "ok");
-  const py = await ensurePy();
-
-  let buffer=[];
-  py.setStdout({ batched:(s)=>buffer.push(String(s)) });
-  py.setStderr({ batched:(s)=>buffer.push(String(s)) });
-
-  try{
-    await py.runPythonAsync(code);
-  }catch(e){
-    buffer.push(String(e));
-  }
-
-  const text = buffer.join("").trimEnd();
-  if (text){
-    const isErr = text.includes("Traceback") || text.toLowerCase().includes("error");
-    appendLine(text, isErr ? "line-err" : "line-ok");
-  }
-}
-
-async function runLua(code){
-  setPill(modePill, "lua-fengari", "ok");
-  await ensureLua();
-
-  const { lua, lauxlib, lualib, to_luastring, to_jsstring } = window.fengari;
-  const L = lauxlib.luaL_newstate();
-  lualib.luaL_openlibs(L);
-
-  lua.lua_pushjsfunction(L, function(L){
-    const n = lua.lua_gettop(L);
-    let parts=[];
-    for (let i=1;i<=n;i++){
-      const s = lauxlib.luaL_tolstring(L, i);
-      parts.push(to_jsstring(s));
-      lua.lua_pop(L, 1);
-    }
-    appendLine(parts.join("\t"), "line-ok");
-    return 0;
-  });
-  lua.lua_setglobal(L, to_luastring("print"));
-
-  const status = lauxlib.luaL_dostring(L, to_luastring(code));
-  if (status !== lua.LUA_OK){
-    const err = to_jsstring(lua.lua_tostring(L, -1));
-    appendLine(err, "line-err");
-  }
-}
-
-function runMyLang(src){
-  setPill(modePill, "mylang", "ok");
-  const vars = Object.create(null);
-  const lines = src.split("\n");
-
-  function evalExpr(expr){
-    const allowed = /^[0-9a-zA-Z_+\-*/().\s"']+$/;
-    if (!allowed.test(expr)) throw new Error("invalid chars: " + expr);
-
-    const replaced = expr.replace(/\b[a-zA-Z_]\w*\b/g, (name)=>{
-      if (name === "true" || name === "false" || name === "null") return name;
-      return `__vars__["${name}"]`;
-    });
-
-    const fn = new Function("__vars__", `"use strict"; return (${replaced});`);
-    return fn(vars);
-  }
-
-  for (let i=0;i<lines.length;i++){
-    const raw = lines[i].trim();
-    if (!raw || raw.startsWith("#")) continue;
+  if(lang.value==="js"){
     try{
-      if (raw.startsWith("let ")){
-        const m = raw.match(/^let\s+([a-zA-Z_]\w*)\s*=\s*(.+)$/);
-        if (!m) throw new Error("bad let syntax");
-        vars[m[1]] = evalExpr(m[2]);
-      }else if (raw.startsWith("print ")){
-        const v = evalExpr(raw.slice(6).trim());
-        appendLine(String(v), "line-ok");
-      }else{
-        const v = evalExpr(raw);
-        appendLine(String(v), "line-ok");
-      }
+      const r = new Function(src);
+      r();
+      log("done.","ok");
     }catch(e){
-      appendLine(`Line ${i+1}: ${e.message}`, "line-err");
+      log(String(e),"err");
     }
   }
-}
-
-/* =========================
-   6) app wiring
-========================= */
-let editor = null;
-
-async function run(){
-  const code = editor.getValue();
-  const lang = langEl.value;
-
-  appendLine(`— ${now()} RUN (${lang}) —`, "line-muted");
-  const t0 = performance.now();
-
-  try{
-    if (lang==="js") await runJS(code);
-    else if (lang==="py") await runPy(code);
-    else if (lang==="lua") await runLua(code);
-    else if (lang==="mylang") runMyLang(code);
-  }catch(e){
-    appendLine(String(e && e.stack ? e.stack : e), "line-err");
-  }finally{
-    const ms = Math.round(performance.now() - t0);
-    runInfo.textContent = `last run: ${ms}ms`;
-  }
-}
-
-function resetEditor(){
-  editor.setValue(defaultCodeFor(langEl.value));
-  updateStatsFromCode(editor.getValue());
-}
-
-function saveCode(){
-  localStorage.setItem(CODE_KEY, JSON.stringify({ lang: langEl.value, code: editor.getValue() }));
-  appendLine("Saved (localStorage).", "line-muted");
-}
-function loadCode(){
-  const raw = localStorage.getItem(CODE_KEY);
-  if (!raw){ appendLine("No saved code.", "line-muted"); return; }
-  try{
-    const obj = JSON.parse(raw);
-    if (obj.lang) langEl.value = obj.lang;
-    editor.setValue(obj.code || "");
-    monaco.editor.setModelLanguage(editor.getModel(), monacoLangFor(langEl.value));
-    updateStatsFromCode(editor.getValue());
-    appendLine("Loaded (localStorage).", "line-muted");
-  }catch{
-    appendLine("Load failed.", "line-err");
-  }
-}
-
-/* file open/download */
-function openFile(){
-  $("fileInput").click();
-}
-$("fileInput").addEventListener("change", async (e)=>{
-  const f = e.target.files?.[0];
-  if (!f) return;
-  const text = await f.text();
-  editor.setValue(text);
-  updateStatsFromCode(text);
-
-  const name = (f.name || "").toLowerCase();
-  if (name.endsWith(".py")) langEl.value="py";
-  else if (name.endsWith(".lua")) langEl.value="lua";
-  else if (name.endsWith(".js")) langEl.value="js";
-  else langEl.value="mylang";
-
-  monaco.editor.setModelLanguage(editor.getModel(), monacoLangFor(langEl.value));
-  appendLine(`Opened file: ${f.name}`, "line-muted");
-  e.target.value = "";
-});
-
-function downloadCode(){
-  const code = editor.getValue();
-  const lang = langEl.value;
-  const ext = lang==="py" ? "py" : lang==="lua" ? "lua" : lang==="js" ? "js" : "txt";
-  const blob = new Blob([code], {type:"text/plain;charset=utf-8"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `code.${ext}`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-/* buttons */
-$("runBtn").onclick = run;
-$("stopBtn").onclick = stopJS;
-$("resetBtn").onclick = resetEditor;
-$("clearOutBtn").onclick = clearOut;
-$("saveBtn").onclick = saveCode;
-$("loadBtn").onclick = loadCode;
-$("openFileBtn").onclick = openFile;
-$("downloadBtn").onclick = downloadCode;
-
-$("copyOutBtn").onclick = async ()=>{
-  try{
-    await copyText(getOutText());
-    appendLine("Output copied.", "line-muted");
-  }catch{
-    appendLine("복사 실패(권한 필요).", "line-err");
-  }
-};
-
-/* donate (링크만) */
-$("donateBtn").onclick = ()=>{
-  if (!DONATE_URL){
-    alert("DONATE_URL이 비어있어! (설정하면 링크로만 열림)");
-    return;
-  }
-  window.open(DONATE_URL, "_blank", "noopener,noreferrer");
-};
-
-/* settings modal */
-const settingsModal = $("settingsModal");
-$("settingsBtn").onclick = ()=> settingsModal.style.display="flex";
-$("closeSettings").onclick = ()=> settingsModal.style.display="none";
-settingsModal.addEventListener("click", (e)=>{ if (e.target===settingsModal) settingsModal.style.display="none"; });
-
-/* language change */
-langEl.addEventListener("change", ()=>{
-  monaco.editor.setModelLanguage(editor.getModel(), monacoLangFor(langEl.value));
-  resetEditor();
-});
-
-/* shortcuts */
-window.addEventListener("keydown", (e)=>{
-  if ((e.ctrlKey||e.metaKey) && e.key==="Enter"){ e.preventDefault(); run(); }
-  if ((e.ctrlKey||e.metaKey) && (e.key==="s" || e.key==="S")){ e.preventDefault(); saveCode(); }
-});
-
-/* =========================
-   7) boot
-========================= */
-(async function boot(){
-  try{
-    await loadMonaco();
-
-    const s = loadSettings();
-
-    editor = monaco.editor.create(document.getElementById("editor"), {
-      value: defaultCodeFor("js"),
-      language: "javascript",
-      theme: s.theme==="white" ? "vs" : "vs-dark",
-      minimap: { enabled: false },
-      automaticLayout: true,
-      fontFamily: getComputedStyle(document.documentElement).getPropertyValue("--mono-font").trim(),
-      fontSize: s.editorSize || 14,
-      lineNumbers: "on",
-      scrollBeyondLastLine: false,
-      padding: { top: 10, bottom: 10 },
-    });
-
-    editor.onDidChangeModelContent(()=> updateStatsFromCode(editor.getValue()));
-
-    initSettingsUI();
-    applySettings();
-
-    // saved code
-    const raw = localStorage.getItem(CODE_KEY);
-    if (raw){
-      try{
-        const obj = JSON.parse(raw);
-        if (obj.lang) langEl.value = obj.lang;
-        editor.setValue(obj.code || defaultCodeFor(langEl.value));
-        monaco.editor.setModelLanguage(editor.getModel(), monacoLangFor(langEl.value));
-      }catch{}
+  else if(lang.value==="mylang"){
+    const lines=src.split("\n");
+    const vars={};
+    for(let i=0;i<lines.length;i++){
+      const l=lines[i].trim();
+      if(!l||l.startsWith("#")) continue;
+      if(l.startsWith("print ")){
+        log(l.slice(6),"ok");
+      }else{
+        log("Line "+(i+1)+" unknown","err");
+      }
     }
-
-    updateStatsFromCode(editor.getValue());
-    setPill(runtimePill, "Ready", "ok");
-    appendLine("Ready. (JS / Python / Lua / MyLang)", "line-muted");
-
-  }catch(err){
-    setPill(runtimePill, "Boot Failed", "err");
-    outEl.textContent = "";
-    appendLine("Editor load failed. 인터넷/CDN 문제일 수 있어.", "line-err");
-    appendLine(String(err), "line-err");
   }
-})();
+  else{
+    log("이 언어는 데모 UI입니다.","muted");
+  }
+};
 </script>
 </body>
 </html>
